@@ -1,0 +1,40 @@
+# Render.com Infrastructure as Code
+# Deploy both frontend and backend to Render
+
+services:
+  # Backend API Service
+  - type: web
+    name: vehicle-detection-backend
+    runtime: python
+    pythonVersion: 3.10
+    plan: free  # Change to 'standard' for production
+    
+    buildCommand: pip install -r backend/requirements.txt
+    startCommand: python -m uvicorn backend.main:app --host 0.0.0.0 --port $PORT
+    
+    envVars:
+      - key: PYTHON_VERSION
+        value: 3.10
+
+    routes:
+      - path: /
+        dest: backend/main.py
+
+  # Frontend Service
+  - type: web
+    name: vehicle-detection-frontend
+    runtime: node
+    plan: free  # Change to 'standard' for production
+    
+    buildCommand: cd frontend && npm install && npm run build
+    startCommand: cd frontend && npx serve -s build -l $PORT
+    
+    envVars:
+      - key: NODE_ENV
+        value: production
+      - key: REACT_APP_API_URL
+        value: https://vehicle-detection-backend.onrender.com
+
+    routes:
+      - path: /
+        dest: frontend/

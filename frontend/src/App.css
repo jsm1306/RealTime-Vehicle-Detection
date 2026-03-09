@@ -1,0 +1,140 @@
+* {
+  font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+}
+
+.App {
+  min-height: 100vh;
+  display: flex;
+  flex-direction: column;
+  background: linear-gradient(135deg, #0f172a 0%, #1a1f3a 100%);
+}
+
+.app-header {
+  background: linear-gradient(180deg, rgba(15, 23, 42, 0.8) 0%, rgba(15, 23, 42, 0.4) 100%);
+  border-bottom: 1px solid rgba(250, 204, 21, 0.1);
+  color: white;
+  padding: 60px 20px 40px;
+  text-align: center;
+  backdrop-filter: blur(10px);
+}
+
+.header-content h1 {
+  font-size: 2.8rem;
+  margin-bottom: 12px;
+  font-weight: 700;
+  color: #f8fafc;
+  letter-spacing: -0.5px;
+}
+
+.header-content p {
+  font-size: 1rem;
+  color: #94a3b8;
+  font-weight: 500;
+  letter-spacing: 0.3px;
+}
+
+.container {
+  flex: 1;
+  max-width: 1400px;
+  margin: 40px auto;
+  width: 100%;
+  padding: 0 20px;
+}
+
+.nav-tabs {
+  display: flex;
+  gap: 12px;
+  margin-bottom: 40px;
+  justify-content: center;
+  flex-wrap: wrap;
+}
+
+.tab-button {
+  padding: 11px 28px;
+  font-size: 0.95rem;
+  font-weight: 600;
+  border: none;
+  border-radius: 20px;
+  cursor: pointer;
+  background: transparent;
+  color: #94a3b8;
+  transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+  letter-spacing: 0.3px;
+}
+
+.tab-button:hover {
+  background: rgba(250, 204, 21, 0.05);
+  color: #facc15;
+  transform: translateY(-1px);
+}
+
+.tab-button.active {
+  background: #facc15;
+  color: #0f172a;
+  font-weight: 700;
+  box-shadow: 0 4px 12px rgba(250, 204, 21, 0.25);
+}
+
+.tab-content {
+  background: rgba(30, 41, 59, 0.5);
+  border-radius: 16px;
+  padding: 40px;
+  border: 1px solid rgba(250, 204, 21, 0.08);
+  box-shadow: 0 8px 32px rgba(0, 0, 0, 0.3);
+  backdrop-filter: blur(10px);
+}
+
+.app-footer {
+  text-align: center;
+  padding: 24px 20px;
+  color: #94a3b8;
+  margin-top: auto;
+  border-top: 1px solid rgba(250, 204, 21, 0.05);
+  font-weight: 500;
+  font-size: 0.9rem;
+}
+
+@media (max-width: 768px) {
+  .header-content h1 {
+    font-size: 1.8rem;
+  }
+
+  .header-content p {
+    font-size: 0.95rem;
+  }
+
+  .app-header {
+    padding: 40px 20px 30px;
+  }
+
+  .container {
+    margin: 20px auto;
+  }
+
+  .tab-button {
+    padding: 10px 20px;
+    font-size: 0.9rem;
+  }
+
+  .tab-content {
+    padding: 20px;
+  }
+
+  .nav-tabs {
+    margin-bottom: 24px;
+  }
+}
+
+@media (max-width: 768px) {
+  .header-content h1 {
+    font-size: 1.8rem;
+  }
+
+  .tab-content {
+    padding: 20px;
+  }
+
+  .container {
+    margin: 20px auto;
+  }
+}
