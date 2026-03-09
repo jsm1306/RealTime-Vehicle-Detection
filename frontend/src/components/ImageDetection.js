@@ -102,8 +102,13 @@ const ImageDetection = () => {
 
   const downloadSampleImage = async () => {
     try {
-      const response = await fetch(`${getAPIBaseURL()}/api/sample-image`);
-      if (!response.ok) throw new Error('Failed to download sample');
+      const apiUrl = `${getAPIBaseURL()}/api/sample-image`;
+      const response = await fetch(apiUrl);
+      
+      if (!response.ok) {
+        throw new Error(`Server returned ${response.status}: ${response.statusText}. Make sure backend is running on port 8000 for local development.`);
+      }
+      
       const blob = await response.blob();
       const url = window.URL.createObjectURL(blob);
       const link = document.createElement('a');
@@ -114,7 +119,7 @@ const ImageDetection = () => {
       document.body.removeChild(link);
       window.URL.revokeObjectURL(url);
     } catch (err) {
-      setError(`Failed to download sample: ${err.message}`);
+      setError(`Download failed: ${err.message}`);
     }
   };
 
@@ -143,6 +148,17 @@ const ImageDetection = () => {
           <p><strong>⚠️ Note:</strong> Running on Render's free-tier CPU. First request may take up to 1-2 minutes to wake server.</p>
         </div>
 
+        <button 
+          onClick={(e) => {
+            e.stopPropagation();
+            downloadSampleImage();
+          }} 
+          className="btn-download-sample"
+          disabled={loading}
+        >
+          📥 Download Sample Image
+        </button>
+
         {!result && (
           <div
             className={`upload-area ${dragActive ? 'active' : ''}`}
@@ -158,25 +174,15 @@ const ImageDetection = () => {
               <p style={{ fontSize: '0.85rem', opacity: 0.7 }}>
                 Supported formats: JPG, PNG, GIF, BMP, WebP
               </p>
-              <button 
-                onClick={(e) => {
-                  e.stopPropagation();
-                  downloadSampleImage();
-                }} 
-                className="btn-download-sample"
+              <input
+                ref={fileInputRef}
+                type="file"
+                accept="image/*"
+                onChange={handleFileSelect}
+                style={{ display: 'none' }}
                 disabled={loading}
-              >
-                📥 Download Sample Image
-              </button>
+              />
             </div>
-            <input
-              ref={fileInputRef}
-              type="file"
-              accept="image/*"
-              onChange={handleFileSelect}
-              style={{ display: 'none' }}
-              disabled={loading}
-            />
           </div>
         )}
 
