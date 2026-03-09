@@ -47,7 +47,7 @@ def main():
     logger.info(f"Model not found at {model_path}. Attempting to download...")
     
     # GitHub raw content URL
-    github_url = "https://github.com/jsm1306/RealTime_VehicleDetection/raw/main/best%20(1).pt"
+    github_url = "https://github.com/jsm1306/RealTime-Vehicle-Detection/raw/main/best%20(1).pt"
     
     # Try to download
     if download_model(github_url, str(model_path)):
