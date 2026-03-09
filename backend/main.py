@@ -38,12 +38,23 @@ OUTPUT_DIR.mkdir(exist_ok=True)
 logger.info(f"Output directory: {OUTPUT_DIR}")
 
 # Load YOLO model
-try:
-    model = YOLO(MODEL_PATH)
-    logger.info(f"Model loaded successfully from {MODEL_PATH}")
-except Exception as e:
-    logger.error(f"Failed to load model: {e}")
-    model = None
+def load_model():
+    """Load YOLO model with detailed logging"""
+    try:
+        if not MODEL_PATH.exists():
+            logger.error(f"Model file not found at {MODEL_PATH}")
+            logger.error(f"Expected path: {MODEL_PATH.absolute()}")
+            return None
+        
+        logger.info(f"Loading model from {MODEL_PATH}")
+        model = YOLO(MODEL_PATH)
+        logger.info(f"✓ Model loaded successfully from {MODEL_PATH}")
+        return model
+    except Exception as e:
+        logger.error(f"✗ Failed to load model: {e}", exc_info=True)
+        return None
+
+model = load_model()
 
 ALLOWED_IMAGE_EXTENSIONS = {".jpg", ".jpeg", ".png", ".gif", ".bmp", ".webp"}
 ALLOWED_VIDEO_EXTENSIONS = {".mp4", ".avi", ".mov", ".mkv", ".flv", ".wmv", ".webm"}
@@ -66,11 +77,19 @@ async def root():
 @app.get("/api/health")
 async def health_check():
     """Check API and model health"""
-    return {
+    health_status = {
         "status": "healthy" if model else "error",
         "model_loaded": model is not None,
-        "gpu_available": True,  # You can add cuda.is_available() check if needed
+        "model_path": str(MODEL_PATH),
+        "model_exists": MODEL_PATH.exists(),
+        "api_running": True,
     }
+    
+    if not model:
+        health_status["error"] = "Model failed to load. Check /api/health for details."
+        health_status["model_path_expected"] = str(MODEL_PATH.absolute())
+    
+    return health_status
 
 
 @app.post("/api/detect/image")
