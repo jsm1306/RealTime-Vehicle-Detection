@@ -12,16 +12,26 @@ const getAPIBaseURL = () => {
 
 const api = axios.create({
   baseURL: getAPIBaseURL(),
-  timeout: 120000,
+  timeout: 300000, // 5 minutes to handle cold starts on free tier
 });
 
 const ImageDetection = () => {
   const [loading, setLoading] = useState(false);
+  const [statusMsg, setStatusMsg] = useState('');
   const [result, setResult] = useState(null);
   const [error, setError] = useState(null);
   const [confidence, setConfidence] = useState(0.5);
   const [dragActive, setDragActive] = useState(false);
   const fileInputRef = useRef(null);
+
+  const wakeUpBackend = async () => {
+    try {
+      setStatusMsg('Waking up server (free tier may take ~60s)...');
+      await axios.get(`${getAPIBaseURL()}/api/health`, { timeout: 120000 });
+    } catch (e) {
+      // ignore errors, still try the main request
+    }
+  };
 
   const handleDetection = async (file) => {
     if (!file) return;
@@ -38,6 +48,10 @@ const ImageDetection = () => {
     setResult(null);
 
     try {
+      // Wake up backend first (handles cold start on Render free tier)
+      await wakeUpBackend();
+
+      setStatusMsg('Running detection...');
       const formData = new FormData();
       formData.append('file', file);
       formData.append('confidence', confidence);
@@ -48,8 +62,10 @@ const ImageDetection = () => {
         },
       });
 
+      setStatusMsg('');
       setResult(response.data);
     } catch (err) {
+      setStatusMsg('');
       setError(err.response?.data?.detail || err.message || 'An error occurred during detection');
     } finally {
       setLoading(false);
@@ -135,7 +151,12 @@ const ImageDetection = () => {
         {loading && (
           <div className="loading-container">
             <div className="spinner"></div>
-            <p>Detecting vehicles...</p>
+            <p>{statusMsg || 'Detecting vehicles...'}</p>
+            {statusMsg && statusMsg.includes('Waking') && (
+              <p style={{ fontSize: '0.8rem', opacity: 0.7 }}>
+                The free-tier server sleeps when idle. This only happens once.
+              </p>
+            )}
           </div>
         )}
 

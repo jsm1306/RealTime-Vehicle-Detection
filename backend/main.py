@@ -47,14 +47,23 @@ def load_model():
             return None
         
         logger.info(f"Loading model from {MODEL_PATH}")
-        model = YOLO(MODEL_PATH)
+        m = YOLO(MODEL_PATH)
         logger.info(f"✓ Model loaded successfully from {MODEL_PATH}")
-        return model
+
+        # Warm up model so first real request is fast
+        logger.info("Warming up model...")
+        dummy = np.zeros((640, 640, 3), dtype=np.uint8)
+        m.predict(source=dummy, conf=0.5, verbose=False)
+        logger.info("✓ Model warm-up complete")
+        return m
     except Exception as e:
         logger.error(f"✗ Failed to load model: {e}", exc_info=True)
         return None
 
 model = load_model()
+
+# Max input dimension for inference (resize large images for speed)
+INFER_SIZE = 640
 
 ALLOWED_IMAGE_EXTENSIONS = {".jpg", ".jpeg", ".png", ".gif", ".bmp", ".webp"}
 ALLOWED_VIDEO_EXTENSIONS = {".mp4", ".avi", ".mov", ".mkv", ".flv", ".wmv", ".webm"}
@@ -124,9 +133,18 @@ async def detect_image(
         if image is None:
             raise HTTPException(status_code=400, detail="Failed to decode image")
 
+        orig_h, orig_w = image.shape[:2]
+
+        # Resize large images before inference for significant speed gains
+        if max(orig_h, orig_w) > INFER_SIZE:
+            scale = INFER_SIZE / max(orig_h, orig_w)
+            infer_image = cv2.resize(image, (int(orig_w * scale), int(orig_h * scale)))
+        else:
+            infer_image = image
+
         # Run inference with timing
         inference_start = time.time()
-        results = model.predict(source=image, conf=confidence, verbose=False)
+        results = model.predict(source=infer_image, conf=confidence, verbose=False)
         result = results[0]
         inference_time = time.time() - inference_start
 
@@ -228,6 +246,12 @@ async def detect_video(
         frame_count = 0
         detection_stats = {"total_vehicles": 0, "frames_processed": 0}
         inference_times = []
+        last_annotated = None  # reuse last result for skipped frames
+
+        # Resize large video frames for inference
+        scale = min(INFER_SIZE / max(width, height), 1.0) if max(width, height) > INFER_SIZE else 1.0
+        infer_w = int(width * scale)
+        infer_h = int(height * scale)
 
         while True:
             ret, frame = cap.read()
@@ -237,9 +261,19 @@ async def detect_video(
             if max_frames and frame_count >= max_frames:
                 break
 
+            # Process 1 in every 3 frames for speed; write last result for skipped frames
+            if frame_count % 3 != 0:
+                if last_annotated is not None:
+                    out.write(last_annotated)
+                frame_count += 1
+                continue
+
+            # Resize frame if needed
+            infer_frame = cv2.resize(frame, (infer_w, infer_h)) if scale < 1.0 else frame
+
             # Run inference with timing
             inference_start = time.time()
-            results = model.predict(source=frame, conf=confidence, verbose=False)
+            results = model.predict(source=infer_frame, conf=confidence, verbose=False)
             result = results[0]
             inference_time = time.time() - inference_start
             inference_times.append(inference_time)
@@ -248,8 +282,11 @@ async def detect_video(
             detection_stats["total_vehicles"] += len(result.boxes)
             detection_stats["frames_processed"] += 1
 
-            # Draw boxes
+            # Draw boxes and resize back to original dimensions
             annotated_frame = result.plot()
+            if scale < 1.0:
+                annotated_frame = cv2.resize(annotated_frame, (width, height))
+            last_annotated = annotated_frame
             out.write(annotated_frame)
 
             frame_count += 1
