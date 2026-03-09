@@ -16,10 +16,6 @@ services:
       - key: PYTHON_VERSION
         value: 3.10
 
-    routes:
-      - path: /
-        dest: backend/main.py
-
   # Frontend Service
   - type: web
     name: vehicle-detection-frontend
@@ -33,7 +29,7 @@ services:
       - key: NODE_ENV
         value: production
       - key: REACT_APP_API_URL
-        value: https://vehicle-detection-backend.onrender.com
+        value: https://vehicle-detection-backend-hn1x.onrender.com
 
     routes:
       - path: /
