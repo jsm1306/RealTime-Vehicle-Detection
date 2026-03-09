@@ -9,6 +9,7 @@ import uuid
 import tempfile
 import os
 from ultralytics import YOLO
+import torch
 import logging
 from typing import Optional
 import base64
@@ -46,15 +47,10 @@ def load_model():
             logger.error(f"Expected path: {MODEL_PATH.absolute()}")
             return None
         
+        torch.set_num_threads(1)
         logger.info(f"Loading model from {MODEL_PATH}")
         m = YOLO(MODEL_PATH)
         logger.info(f"✓ Model loaded successfully from {MODEL_PATH}")
-
-        # Warm up model so first real request is fast
-        logger.info("Warming up model...")
-        dummy = np.zeros((640, 640, 3), dtype=np.uint8)
-        m.predict(source=dummy, conf=0.5, verbose=False)
-        logger.info("✓ Model warm-up complete")
         return m
     except Exception as e:
         logger.error(f"✗ Failed to load model: {e}", exc_info=True)
@@ -144,7 +140,7 @@ async def detect_image(
 
         # Run inference with timing
         inference_start = time.time()
-        results = model.predict(source=infer_image, conf=confidence, verbose=False)
+        results = model(infer_image, conf=confidence, verbose=False)
         result = results[0]
         inference_time = time.time() - inference_start
 
@@ -273,7 +269,7 @@ async def detect_video(
 
             # Run inference with timing
             inference_start = time.time()
-            results = model.predict(source=infer_frame, conf=confidence, verbose=False)
+            results = model(infer_frame, conf=confidence, verbose=False)
             result = results[0]
             inference_time = time.time() - inference_start
             inference_times.append(inference_time)
