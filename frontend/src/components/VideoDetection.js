@@ -15,11 +15,12 @@ const getAPIBaseURL = () => {
 
 const api = axios.create({
   baseURL: getAPIBaseURL(),
-  timeout: 600000, // 10 minutes for long-running operations
+  timeout: 1200000, // 20 minutes for large video processing on free tier
 });
 
 const VideoDetection = () => {
   const [loading, setLoading] = useState(false);
+  const [statusMsg, setStatusMsg] = useState('');
   const [result, setResult] = useState(null);
   const [error, setError] = useState(null);
   const [confidence, setConfidence] = useState(0.5);
@@ -43,6 +44,9 @@ const VideoDetection = () => {
     setProgress(0);
 
     try {
+      setStatusMsg('Waking up server (may take ~60s)...');
+      await axios.get(`${getAPIBaseURL()}/api/health`, { timeout: 120000 });
+      setStatusMsg('Processing video (this may take several minutes)...');
       const formData = new FormData();
       formData.append('file', file);
       formData.append('confidence', confidence);
@@ -60,8 +64,10 @@ const VideoDetection = () => {
       });
 
       setProgress(100);
+      setStatusMsg('');
       setResult(response.data);
     } catch (err) {
+      setStatusMsg('');
       setError(err.response?.data?.detail || err.message || 'An error occurred during detection');
     } finally {
       setLoading(false);
@@ -149,6 +155,10 @@ const VideoDetection = () => {
           />
         </div>
 
+        <div className="disclaimer">
+          <p><strong>⚠️ Important:</strong> Video processing on Render's free-tier CPU is <strong>significantly slower</strong> (5-20+ minutes depending on length). Processing 1 in 3 frames for speed. For faster inference, upgrade to paid tier.</p>
+        </div>
+
         {!result && (
           <div
             className={`upload-area ${dragActive ? 'active' : ''}`}
@@ -178,11 +188,13 @@ const VideoDetection = () => {
 
         {loading && (
           <div className="loading-container">
+            <div className="spinner"></div>
+            <p>{statusMsg || 'Processing video...'}</p>
             <div className="progress-bar">
               <div className="progress-fill" style={{ width: `${progress}%` }}></div>
             </div>
-            <p>Processing video... {progress}%</p>
-            <p style={{ fontSize: '0.85rem', opacity: 0.7 }}>This may take a few minutes</p>
+            <p style={{ fontSize: '0.85rem' }}>{progress}%</p>
+            <p style={{ fontSize: '0.8rem', opacity: 0.7 }}>Free tier processing is slow. Please be patient.</p>
           </div>
         )}
 

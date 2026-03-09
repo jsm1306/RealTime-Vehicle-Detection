@@ -358,6 +358,32 @@ async def get_model_info():
     }
 
 
+@app.get("/api/sample-image")
+async def get_sample_image():
+    """Download sample image for testing"""
+    try:
+        # Use the actual sample image file
+        sample_image_path = BACKEND_DIR.parent / "41598_2023_43458_Fig1_HTML.jpg"
+        
+        if not sample_image_path.exists():
+            logger.warning(f"Sample image not found at {sample_image_path}")
+            raise HTTPException(status_code=404, detail="Sample image not available")
+        
+        logger.info(f"Serving sample image from {sample_image_path}")
+        return FileResponse(
+            sample_image_path,
+            media_type="image/jpeg",
+            headers={"Content-Disposition": "attachment; filename=sample_vehicle.jpg"}
+        )
+    except FileNotFoundError:
+        logger.error(f"Sample image file not found")
+        raise HTTPException(status_code=404, detail="Sample image not found")
+    except Exception as e:
+        logger.error(f"Error serving sample image: {e}")
+        raise HTTPException(status_code=500, detail=f"Failed to serve sample image: {str(e)}")
+
+
+
 if __name__ == "__main__":
     import uvicorn
     import os

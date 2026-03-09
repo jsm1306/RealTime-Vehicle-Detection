@@ -100,6 +100,24 @@ const ImageDetection = () => {
     }
   };
 
+  const downloadSampleImage = async () => {
+    try {
+      const response = await fetch(`${getAPIBaseURL()}/api/sample-image`);
+      if (!response.ok) throw new Error('Failed to download sample');
+      const blob = await response.blob();
+      const url = window.URL.createObjectURL(blob);
+      const link = document.createElement('a');
+      link.href = url;
+      link.download = 'sample_vehicle.jpg';
+      document.body.appendChild(link);
+      link.click();
+      document.body.removeChild(link);
+      window.URL.revokeObjectURL(url);
+    } catch (err) {
+      setError(`Failed to download sample: ${err.message}`);
+    }
+  };
+
   return (
     <div className="detection-container">
       <div className="detection-card">
@@ -121,6 +139,10 @@ const ImageDetection = () => {
           />
         </div>
 
+        <div className="disclaimer">
+          <p><strong>⚠️ Note:</strong> Running on Render's free-tier CPU. First request may take up to 1-2 minutes to wake server.</p>
+        </div>
+
         {!result && (
           <div
             className={`upload-area ${dragActive ? 'active' : ''}`}
@@ -136,6 +158,16 @@ const ImageDetection = () => {
               <p style={{ fontSize: '0.85rem', opacity: 0.7 }}>
                 Supported formats: JPG, PNG, GIF, BMP, WebP
               </p>
+              <button 
+                onClick={(e) => {
+                  e.stopPropagation();
+                  downloadSampleImage();
+                }} 
+                className="btn-download-sample"
+                disabled={loading}
+              >
+                📥 Download Sample Image
+              </button>
             </div>
             <input
               ref={fileInputRef}
