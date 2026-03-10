@@ -22,9 +22,12 @@ logger = logging.getLogger(__name__)
 app = FastAPI(title="Vehicle Detection API", version="1.0.0")
 
 # CORS middleware for React frontend
+# configure CORS to permit the frontend domain only
+# Note: when allow_credentials=True you cannot use "*" for allow_origins
 app.add_middleware(
     CORSMiddleware,
-    allow_origins=["*"],
+    allow_origins=["https://vehicle-detection-frontend.onrender.com",
+    "http://localhost:3000"],
     allow_credentials=True,
     allow_methods=["*"],
     allow_headers=["*"],
@@ -49,7 +52,8 @@ def load_model():
             return None
         
         logger.info(f"Loading model from {MODEL_PATH}")
-        m = YOLO(MODEL_PATH)
+        # specify detection task explicitly to avoid warning
+        m = YOLO(MODEL_PATH, task="detect")
         logger.info(f"✓ Model loaded successfully from {MODEL_PATH}")
         return m
     except Exception as e:
