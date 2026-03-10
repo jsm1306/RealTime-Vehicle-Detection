@@ -9,7 +9,6 @@ import uuid
 import tempfile
 import os
 from ultralytics import YOLO
-import torch
 import logging
 from typing import Optional
 import base64
@@ -33,7 +32,9 @@ app.add_middleware(
 
 # Model path
 BACKEND_DIR = Path(__file__).parent.absolute()
-MODEL_PATH = BACKEND_DIR.parent / "best (1).pt"
+# determine model path from environment or default location
+default_model = BACKEND_DIR / "models" / "best.onnx"
+MODEL_PATH = Path(os.getenv("MODEL_PATH", default_model))
 OUTPUT_DIR = BACKEND_DIR / "outputs"
 OUTPUT_DIR.mkdir(exist_ok=True)
 logger.info(f"Output directory: {OUTPUT_DIR}")
@@ -47,7 +48,6 @@ def load_model():
             logger.error(f"Expected path: {MODEL_PATH.absolute()}")
             return None
         
-        torch.set_num_threads(1)
         logger.info(f"Loading model from {MODEL_PATH}")
         m = YOLO(MODEL_PATH)
         logger.info(f"✓ Model loaded successfully from {MODEL_PATH}")
