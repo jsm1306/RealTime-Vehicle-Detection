@@ -158,7 +158,15 @@ const ImageDetection = () => {
         >
           📥 Download Sample Image
         </button>
-
+          <button
+                className="btn-secondary"
+                onClick={() => {
+                  setResult(null);
+                  fileInputRef.current?.click();
+                }}
+              >
+                Detect Another Image
+              </button>
         {!result && (
           <div
             className={`upload-area ${dragActive ? 'active' : ''}`}
@@ -168,6 +176,7 @@ const ImageDetection = () => {
             onDrop={handleDrop}
             onClick={() => fileInputRef.current?.click()}
           >
+            
             <div className="upload-content">
               <h3>Upload an Image</h3>
               <p>Drag and drop your image here, or click to browse</p>
@@ -207,11 +216,42 @@ const ImageDetection = () => {
 
         {result && (
           <div className="result-container">
+            {/* LEFT SIDE: Detection Image */}
             <div className="result-image">
               <img src={result.annotated_image} alt="Detected vehicles" />
             </div>
 
-            <div className="result-stats">
+            {/* RIGHT SIDE: Detection Table */}
+            {result.detections.length > 0 && (
+              <div className="result-table-section">
+                <div className="detections-list">
+                  <h4>Detection Details:</h4>
+                  <table>
+                    <thead>
+                      <tr>
+                        <th>Class</th>
+                        <th>Confidence</th>
+                        <th>Position</th>
+                      </tr>
+                    </thead>
+                    <tbody>
+                      {result.detections.map((det, idx) => (
+                        <tr key={idx}>
+                          <td>{det.class_name}</td>
+                          <td>{(det.confidence * 100).toFixed(1)}%</td>
+                          <td>
+                            ({Math.round(det.bbox.x1)}, {Math.round(det.bbox.y1)})
+                          </td>
+                        </tr>
+                      ))}
+                    </tbody>
+                  </table>
+                </div>
+              </div>
+            )}
+
+            {/* BOTTOM: Metrics and Stats */}
+            <div className="result-stats-bottom">
               <h3>Detection Results</h3>
               
               <div className="stats-section">
@@ -242,41 +282,7 @@ const ImageDetection = () => {
                 </div>
               )}
 
-              {result.detections.length > 0 && (
-                <div className="detections-list">
-                  <h4>Detection Details:</h4>
-                  <table>
-                    <thead>
-                      <tr>
-                        <th>Class</th>
-                        <th>Confidence</th>
-                        <th>Position</th>
-                      </tr>
-                    </thead>
-                    <tbody>
-                      {result.detections.map((det, idx) => (
-                        <tr key={idx}>
-                          <td>{det.class_name}</td>
-                          <td>{(det.confidence * 100).toFixed(1)}%</td>
-                          <td>
-                            ({Math.round(det.bbox.x1)}, {Math.round(det.bbox.y1)})
-                          </td>
-                        </tr>
-                      ))}
-                    </tbody>
-                  </table>
-                </div>
-              )}
-
-              <button
-                className="btn-secondary"
-                onClick={() => {
-                  setResult(null);
-                  fileInputRef.current?.click();
-                }}
-              >
-                Detect Another Image
-              </button>
+              
             </div>
           </div>
         )}
